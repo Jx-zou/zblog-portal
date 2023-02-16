@@ -1,0 +1,45 @@
+.wrap {
+  margin: 1rem 1rem 1rem 0;
+  transform-style: preserve-3d;
+  transform: perspective(100rem);
+  cursor: pointer;
+  &:hover .container::before,
+  &:hover .container::after {
+    width: calc(100% - 2rem);
+    height: calc(100% - 2rem);
+  }
+  .container {
+    border-radius: 1rem;
+    padding: 2rem;
+    display: flex;
+    align-items: flex-end;
+    position: relative;
+    transform: rotateX(calc(0 * 1deg)) rotateY(calc(0 * 1deg));
+    background-position: 50% 80%;
+    box-shadow: 0 0 3rem .5rem hsla(0, 0%, 0%, .2);
+    transition: transform .6s 1s;
+    &::before,
+    &::after {
+      content: '';
+      width: 2rem;
+      height: 2rem;
+      border: 1px solid var(--nextui-colors-text);
+      position: absolute;
+      z-index: 2;
+      opacity: .3;
+      transition: .3s;
+    }
+    &::before {
+      top: 1rem;
+      right: 1rem;
+      border-bottom-width: 0;
+      border-left-width: 0;
+    }
+    &::after {
+      bottom: 1rem;
+      left: 1rem;
+      border-top-width: 0;
+      border-right-width: 0;
+    }
+  }
+}
