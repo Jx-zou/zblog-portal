@@ -1,19 +1,17 @@
 import useDynamicInput from '@/hook/useDynamicInput'
 import { SvgButton } from '@/layouts/styles'
-import { FETCH_MAIL_URL, FETCH_REGISTRY_URL } from '@/lib/api'
-import { createInputHelper } from '@/lib/common'
+import { FETCH_MAIL_CAPTCHA_URL, FETCH_REGISTRY_URL } from '@/lib/api'
+import { InputHelper, refreshClientId, refreshPkey } from '@/lib/common'
 import { SendMail } from '@/lib/icons'
 import { changeRegistryVisible } from '@/redux/slices/personalSlice'
-import { changeLoginState, changeUserinfo } from '@/redux/slices/userSlice'
-import { Button, Input, Loading, Modal, Row, Text } from '@nextui-org/react'
+import { changeUserinfo } from '@/redux/slices/userSlice'
+import { Button, Input, Loading, Modal, Row, Text, Textarea } from '@nextui-org/react'
 import { useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 
 import styles from '@/styles/Global.module.scss'
-import { PROJECT_INPUT_TIP, PROJECT_NAME, PROJECT_REGS } from '@/lib/constants'
-import usePermission from '@/hook/usePermission'
-import { RSAEncrypt } from '@/lib/utils'
-import JSEncrypt from 'jsencrypt'
+import { COOKIE_NAMES, PROJECT_INPUT_TIP, PROJECT_NAME, PROJECT_REGS } from '@/lib/constants'
+import { CookieUtils, RsaUtils } from '@/lib/utils'
 
 const RegistryModal = () => {
   const [sending, setSending] = useState(false)
@@ -21,100 +19,109 @@ const RegistryModal = () => {
 
   const [errorPrompt, setErrorPrompt] = useState('')
   const [countdown, setCountdown] = useState()
-  const [countdownInterval, setCountdownInterval] = useState()
 
   const registryVisible = useSelector((state) => state.personal.registryVisible)
   const dispatch = useDispatch()
 
-  const [nickname, nicknameReset, nicknameBindings] = useDynamicInput()
-  const [password, passwordReset, passwordBindings] = useDynamicInput()
-  const [email, emailReset, emailBindings] = useDynamicInput()
-  const [code, codeReset, codeBindings] = useDynamicInput()
-
   const [nicknameValid, setNicknameValid] = useState(false)
   const [passwordValid, setPasswordValid] = useState(false)
+  const [descValid, setDescValid] = useState(false)
   const [emailValid, setEmailValid] = useState(false)
   const [codeValid, setCodeValid] = useState(false)
 
-  const isValid = () => (nicknameValid && passwordValid && emailValid && codeValid) ? true : false
+  const [nickname, nicknameReset, nicknameBindings] = useDynamicInput(setNicknameValid)
+  const [password, passwordReset, passwordBindings] = useDynamicInput(setPasswordValid)
+  const [email, emailReset, emailBindings] = useDynamicInput(setEmailValid)
+  const [code, codeReset, codeBindings] = useDynamicInput(setCodeValid)
+  const [desc, descReset, descBindings] = useDynamicInput(setDescValid, PROJECT_INPUT_TIP.default.desc)
+
+  const isValid = () => (nicknameValid && passwordValid && emailValid && codeValid && descValid) ? true : false
 
   const validateNickname = (value) => value.match(PROJECT_REGS.nickname)
   const validatePassword = (value) => value.match(PROJECT_REGS.password)
+  const validateDesc = (value) => value.match(PROJECT_REGS.desc)
   const validateEmail = (value) => value.match(PROJECT_REGS.email)
   const validateCode = (value) => value.match(PROJECT_REGS.validCode)
 
-  const nicknameHelper = useMemo(() => createInputHelper(nickname, validateNickname, setNicknameValid, PROJECT_INPUT_TIP.error.nickname, 'error', 'success'), [nickname])
-  const passwordHelper = useMemo(() => createInputHelper(password, validatePassword, setPasswordValid, PROJECT_INPUT_TIP.error.password.registry, 'error', 'success'), [password])
-  const emailHelper = useMemo(() => createInputHelper(email, validateEmail, setEmailValid, PROJECT_INPUT_TIP.error.email, 'error', 'success'), [email])
-  const codeHelper = useMemo(() => createInputHelper(code, validateCode, setCodeValid, PROJECT_INPUT_TIP.error.validCode, 'error', 'success'), [code])
+  const nicknameHelper = useMemo(() => InputHelper.createInputHelper(nickname, validateNickname, setNicknameValid, PROJECT_INPUT_TIP.error.nickname, 'error', 'success'), [nickname])
+  const passwordHelper = useMemo(() => InputHelper.createInputHelper(password, validatePassword, setPasswordValid, PROJECT_INPUT_TIP.error.password.registry, 'error', 'success'), [password])
+  const emailHelper = useMemo(() => InputHelper.createInputHelper(email, validateEmail, setEmailValid, PROJECT_INPUT_TIP.error.email, 'error', 'success'), [email])
+  const codeHelper = useMemo(() => InputHelper.createInputHelper(code, validateCode, setCodeValid, PROJECT_INPUT_TIP.error.validCode, 'error', 'success'), [code])
+  const descHelper = useMemo(() => InputHelper.createInputHelper(desc, validateDesc, setDescValid, PROJECT_INPUT_TIP.error.desc, 'error', 'success'), [desc])
 
-  const { publickey, zblogId } = usePermission()
+  const pkey = CookieUtils.get(COOKIE_NAMES.PUBLICKEY)
 
   const registryHandler = async () => {
     if (!isValid()) return
     if (registering) return
     setRegistering(true)
-    const instance = new JSEncrypt()
-    instance.setPublicKey(publickey)
     await fetch(FETCH_REGISTRY_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json;charset=utf-8',
-        'ZBGID': zblogId
-      },
       mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json;charset=UTF-8',
+        cid: CookieUtils.get(COOKIE_NAMES.CLIENTID)
+      },
       body: JSON.stringify({
-        nickname: instance.encrypt(nickname),
-        password: instance.encrypt(password),
-        email: instance.encrypt(email),
-        code: instance.encrypt(code)
+        nickname: RsaUtils.base64Encrypt(nickname, pkey),
+        password: RsaUtils.base64Encrypt(password, pkey),
+        mail: RsaUtils.base64Encrypt(email, pkey),
+        code: RsaUtils.base64Encrypt(code, pkey),
+        desc: RsaUtils.base64Encrypt(desc, pkey)
       })
     })
-      .then(res => {
-        cookieUtils.set('ZBGUK', res.headers.get('ZBGUK'))
-        return res.json()
-      })
+      .then(res => res.json())
       .then(json => {
-        if (json.state === 200) {
-          dispatch(changeLoginState(true))
+        refreshPkey()
+        refreshClientId()
+        if (json.state === 2200) {
           dispatch(changeUserinfo({ userinfo: json.value.userinfo }))
-          dispatch(changeRegistryVisible(false))
+          closeHandler()
           return
         }
-        setErrorPrompt(json.value || '注册失败')
+        setErrorPrompt(json.message || '注册失败')
       })
       .catch(err => console.error(err))
       .finally(() => setRegistering(false))
   }
 
+  let countdownInterval
+
   const sendMailHandler = () => {
     setCountdown(60)
     setSending(true)
-    setCountdownInterval(setInterval(() => {
+    countdownInterval = setInterval(() => {
       setCountdown(countdown => {
         if (countdown === 1) {
           setSending(false)
-          clearInterval(countdownInterval)
+          if (countdownInterval) {
+            clearInterval(countdownInterval)
+            countdownInterval = null
+            return
+          }
         }
         return countdown - 1
       })
-    }, 1000))
+    }, 1000)
     sendMail()
   }
 
   const sendMail = async () => {
-    await fetch(FETCH_MAIL_URL, {
+    await fetch(FETCH_MAIL_CAPTCHA_URL, {
       method: "POST",
-      headers: {
-        'Content-Type': 'application/json;charset=utf-8',
-        'ZBGID': zblogId
-      },
       mode: 'cors',
+      credentials: 'include',
+      body: RsaUtils.base64Encrypt(email, pkey)
     })
       .then(res => res.json())
       .then(json => {
-        if (json.state !== 200) {
+        if (json.state !== 2000) {
           setErrorPrompt(json.value || "发送失败")
+        }
+        if (json.state === 5000) {
+          CookieUtils.remove(COOKIE_NAMES.CLIENTID)
+          CookieUtils.remove(COOKIE_NAMES.PUBLICKEY)
+          return
         }
       })
       .catch(err => console.error(err))
@@ -124,11 +131,24 @@ const RegistryModal = () => {
     if (countdownInterval) {
       clearInterval(countdownInterval)
     }
+    setErrorPrompt('')
+    nicknameReset()
+    passwordReset()
+    descReset()
+    emailReset()
+    codeReset()
+    InputHelper.resetInputHelper(nicknameHelper)
+    InputHelper.resetInputHelper(passwordHelper)
+    InputHelper.resetInputHelper(descHelper)
+    InputHelper.resetInputHelper(emailHelper)
+    InputHelper.resetInputHelper(codeHelper)
     dispatch(changeRegistryVisible(false))
   }
 
+  const isCanSend = useMemo(() => sending || !emailValid, [emailValid, sending])
+
   return (
-    <Modal open={registryVisible} onClose={() => dispatch(changeRegistryVisible(false))} css={{ backgroundColor: '$accents1' }} closeButton preventClose aria-labelledby='Registry modal'>
+    <Modal open={registryVisible} onClose={closeHandler} css={{ backgroundColor: '$accents1' }} closeButton preventClose aria-labelledby='Registry modal'>
       <Modal.Header justify='flex-start' aria-labelledby='registry title'>
         <Text id='registry-panel-title' css={{ bgClip: 'text', textGradient: '45deg, $blue600 -20%, $purple600 60%, $yellow600 100%', mb: '$0' }} size={18}>
           Welcome to join
@@ -178,20 +198,22 @@ const RegistryModal = () => {
         <Input
           {...codeBindings}
           type='number'
+          min={6}
+          max={6}
           clearable
           contentRightStyling={false}
           placeholder='valid code'
           contentLeft={sending ? <Text>{countdown}</Text> : ''}
           contentRight={
             <SvgButton
-              disabled={sending}
+              disabled={isCanSend}
               onClick={sendMailHandler}
               css={{
-                mr: '$5',
+                mx: '$5',
                 cursor: sending ? 'auto' : 'pointer',
-                '& svg': { opacity: sending ? '0.4' : '1' },
-                '&:hover': { '& svg': { opacity: sending ? '0.4' : '0.7' } },
-                '&:active': { '& svg': { opacity: sending ? '0.4' : '0.2' } }
+                '& svg': { opacity: isCanSend ? '0.4' : '1' },
+                '&:hover': { '& svg': { opacity: isCanSend ? '0.4' : '0.7' } },
+                '&:active': { '& svg': { opacity: isCanSend ? '0.4' : '0.2' } }
               }}>
               <SendMail />
             </SvgButton>
@@ -204,10 +226,22 @@ const RegistryModal = () => {
           className={styles['number-input']}
           aria-label='Valid code input'
         />
+        <Textarea
+          {...descBindings}
+          defaultValue={desc}
+          initialValue={desc}
+          placeholder='description'
+          maxLength={110}
+          status={descHelper.color}
+          helperColor={descHelper.color}
+          helperText={descHelper.text}
+          css={{ mt: '$2' }}
+          aria-label='User desc textarea'
+        />
         <Row justify='flex-end' align='center' css={{ mt: '$3' }}>
-          <Text css={{ ml: '$0', mr: 'auto' }} color='error'>{errorPrompt}</Text>
+          <Text small css={{ ml: '$0', mr: 'auto' }} color='error'>{errorPrompt}</Text>
           <Button auto color='error' css={{ mr: '$5' }} onPress={closeHandler}>退出</Button>
-          <Button auto disabled={!isValid()} onPress={registryHandler}>{registering ? <Loading color='currentColor' type="spinner" size="lg" /> : '注册'}</Button>
+          <Button auto disabled={!isValid()} onPress={registryHandler}>{registering ? <Loading color='currentColor' type="spinner" size='sm' /> : '注册'}</Button>
         </Row>
       </Modal.Body>
     </Modal>

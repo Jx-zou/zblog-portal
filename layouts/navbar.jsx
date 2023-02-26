@@ -28,11 +28,21 @@ const FootNavbar = () => {
 
   const personalActions = (key) => {
     switch (key) {
-      case 'Login_Logout': isSigned ? dispatch(changeLogoutVisible(true)) : dispatch(changeLoginVisible(true)); return;
-      case 'Personal_Info': if (isSigned) dispatch(changeInfoVisible(true)); return;
-      case 'Registry': dispatch(changeRegistryVisible(true)); return;
-      case 'Write_Article': dispatch(changeWriteArticleVisible(true)); return;
-      case 'Article_Manager': dispatch(changeArticleManagerVisible(true)); return;
+      case 'Login_Logout':
+        isSigned ? dispatch(changeLogoutVisible(true)) : dispatch(changeLoginVisible(true))
+        return
+      case 'Personal_Info':
+        if (isSigned) dispatch(changeInfoVisible(true))
+        return
+      case 'Registry':
+        dispatch(changeRegistryVisible(true))
+        return
+      case 'Write_Article':
+        dispatch(changeWriteArticleVisible(true))
+        return
+      case 'Article_Manager':
+        dispatch(changeArticleManagerVisible(true))
+        return
     }
   }
 
@@ -55,7 +65,7 @@ const FootNavbar = () => {
           <Dropdown placement='top-left'>
             <Navbar.Item>
               <Dropdown.Trigger>
-                <Avatar bordered as='button' color='gradient' size='md' src={info.avatar.url} alt={info.avatar.alt} textColor='white' />
+                <Avatar bordered as='button' color='gradient' size='md' src={info.avatar} alt={info.avatar} textColor='white' />
               </Dropdown.Trigger>
             </Navbar.Item>
             <Dropdown.Menu color='primary' key='Personal_Center' disabledKeys={isSigned ? ['Registry'] : ['Personal_Info', 'Write_Article', 'Article_Manager']} onAction={personalActions}>

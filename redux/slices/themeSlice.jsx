@@ -17,7 +17,6 @@ export const ThemeSlice = createSlice({
       let mode = action.payload.mode;
       let color = action.payload.color;
       if (mode && (background.modes.includes(mode))) {
-        console.log(mode);
         state.background.mode = mode;
       }
       if (color && (background.colors.includes(color) || color === background.default.color)) {

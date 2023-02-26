@@ -5,14 +5,14 @@ import Base64 from 'crypto-js/enc-base64'
 import Utf8 from 'crypto-js/enc-utf8'
 
 import { emojis } from './emoji'
-import { FETCH_PUBLISH_URL, FETCH_UPLOAD_URL } from '@/lib/api'
+import { FETCH_PUBLISH_URL, FETCH_UPLOAD_ARTICLE_URL, FETCH_UPLOAD_URL } from '@/lib/api'
 import Vditor from 'vditor'
 
 import 'vditor/dist/index.css'
 import { changeWriteArticleVisible } from "@/redux/slices/personalSlice"
 import { useDispatch } from "react-redux"
-import { cookieUtils, stringUtils } from "@/lib/utils"
-import { PROJECT_INPUT_TIP, PROJECT_REGS } from "@/lib/constants"
+import { CookieUtils, cookieUtils, StringUtils, stringUtils } from "@/lib/utils"
+import { COOKIE_NAMES, PROJECT_INPUT_TIP, PROJECT_REGS } from "@/lib/constants"
 
 const StyledEditor = styled('div', {
   pre: {
@@ -39,22 +39,23 @@ const Editor = () => {
     )
   }
 
-  const isValid = useMemo(() => !(stringUtils.isBlank(title) || stringUtils.isBlank(desc)), [desc, title])
+  const isValid = useMemo(() => StringUtils.isNotBlank(title) || StringUtils.isBlank(desc), [desc, title])
 
   const publish = async () => {
     if (isPushing) return
     setIsPushing(true)
     setIsOpen(false)
-    await fetch(FETCH_PUBLISH_URL, {
+    const formdata = new FormData()
+    formdata.append('title', Base64.stringify(Utf8.parse(title)))
+    formdata.append('desc', Base64.stringify(Utf8.parse(desc)))
+    formdata.append('file', vd.getHTML())
+    await fetch(FETCH_UPLOAD_ARTICLE_URL, {
       method: "post",
       headers: {
-        Authorization: cookieUtils.get('ZBGUK'),
+        'Content-Type': 'multipart/form-data',
+        Authorization: CookieUtils.get(COOKIE_NAMES.TOKEN),
       },
-      body: {
-        title: Base64.stringify(Utf8.parse(title)),
-        desc: Base64.stringify(Utf8.parse(desc)),
-        data: Base64.stringify(Utf8.parse(vd.getHTML()))
-      }
+      body: formdata
     })
       .then(res => res.json())
       .then(json => {
@@ -163,7 +164,7 @@ const Editor = () => {
                   minRows={1}
                   maxRows={10}
                   onChange={(e) => setDesc(e.target.value)}
-                  aria-label='Desc textarea'
+                  aria-label='Article desc textarea'
                 />
               </Card.Body>
               <Card.Footer>

@@ -1,4 +1,6 @@
 .wrap {
+  max-width: 25rem;
+  min-width: 18rem;
   margin: 1rem 1rem 1rem 0;
   transform-style: preserve-3d;
   transform: perspective(100rem);

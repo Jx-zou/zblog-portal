@@ -3,14 +3,12 @@ import { createSlice } from '@reduxjs/toolkit';
 export const UserSlice = createSlice({
   name: 'user',
   initialState: {
-    isSigned: true,
+    isSigned: false,
     info: {
+      username: '',
       nickname: 'z-blog',
       desc: 'Welcome to z-blog',
-      mail: 'jx.zou@foxmail.com',
-      avatar: {
-        url: '/images/head.png',
-      }
+      avatar: '/images/head.png',
     }
   },
   reducers: {

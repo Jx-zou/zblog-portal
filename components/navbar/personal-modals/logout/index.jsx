@@ -1,18 +1,37 @@
+import { FETCH_LOGOUT_URL } from "@/lib/api"
 import { user } from "@/lib/config"
+import { COOKIE_NAMES } from "@/lib/constants"
+import { CookieUtils, StringUtils } from "@/lib/utils"
 import { changeLogoutVisible } from "@/redux/slices/personalSlice"
 import { changeUserinfo, changeLoginState } from "@/redux/slices/userSlice"
-import { Button, Col, Modal, Row, Text } from "@nextui-org/react"
+import { Button, Modal, Row, Text } from "@nextui-org/react"
 import { useDispatch, useSelector } from "react-redux"
-
 
 const LogoutModal = () => {
   const logoutVisible = useSelector((state) => state.personal.logoutVisible)
   const dispatch = useDispatch()
 
-  const logoutHandler = () => {
-    dispatch(changeLoginState(false))
-    dispatch(changeUserinfo({ userinfo: user.info }))
-    dispatch(changeLogoutVisible(false))
+  const logoutHandler = async () => {
+    if (StringUtils.isBlank(token)) return
+    await fetch(FETCH_LOGOUT_URL, {
+      method: "POST",
+      headers: {
+        Authorization: token,
+      }
+    })
+      .then(res => res.json())
+      .then(json => {
+        refreshPkey()
+        refreshClientId()
+        if (json.status === 2000) {
+          dispatch(changeLoginState(false))
+          dispatch(changeUserinfo({ userinfo: user.info }))
+          CookieUtils.remove(COOKIE_NAMES.TOKEN)
+          CookieUtils.remove(COOKIE_NAMES.USERINFO)
+          dispatch(changeLogoutVisible(false))
+        }
+      })
+      .catch(err => console.log(err))
   }
 
   return (

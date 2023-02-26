@@ -23,7 +23,7 @@ const Background = () => {
   const switchBackground = () => {
     switch (mode) {
       case 'default': return <div style={{ width: '100%', height: '100%', backgroundColor: color }} />
-      case 'rain': return <CharacterRain />
+      case 'rain': return <CharacterRain fontSize={9} />
       case 'fluid': return <Fluid />
       case 'particle': return <ColorsParticle />
     }

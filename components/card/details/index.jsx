@@ -1,8 +1,9 @@
 import { SvgButton } from "@/layouts/styles"
+import { user } from "@/lib/config"
+import { PROJECT_NAME } from "@/lib/constants"
 import { DisLike, Like, Share, Star } from "@/lib/icons"
-import { stringUtils } from "@/lib/utils"
-import { changeCardView } from "@/redux/slices/contentSlice"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { changeCardView } from "@/redux/slices/articleSlice"
+import { useCallback, useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 
 const { Modal, Text, Button, styled, Loading, User } = require("@nextui-org/react")
@@ -24,7 +25,7 @@ const StyledIcons = styled("div", {
 const Details = () => {
   const [fetching, setFetching] = useState(false)
   const [content, setContent] = useState()
-  const [isView, item] = useSelector((state) => [state.content.isView, state.content.item])
+  const [isView, item] = useSelector((state) => [state.article.isView, state.article.item])
 
   const [collected, setCollected] = useState(false)
   const [liked, setLiked] = useState(false)
@@ -83,9 +84,10 @@ const Details = () => {
       </Modal.Body>
       <Modal.Footer justify='space-between'>
         <User as='button'
-          src={item.author.avatar.url}
+          src={item.author.avatar.url ? item.author.avatar.url : user.info.avatar.url}
           name={item.author.name}
           description={item.author.desc}
+          altText={PROJECT_NAME}
         />
         <StyledIcons>
           <SvgButton onClick={starClickHandler}>

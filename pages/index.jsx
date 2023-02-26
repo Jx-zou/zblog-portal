@@ -1,22 +1,77 @@
-import { Layout } from '@/layouts/layout'
-
 import { Inter } from '@next/font/google'
-import { useDispatch } from 'react-redux'
-import { initialize } from '@/redux/slices/initialSlice'
-import { FETCH_PKEY_URL } from '@/lib/api'
-import { useEffect } from 'react'
+
+import { Layout } from '@/layouts/layout'
 import View from '@/layouts/view'
-import { nanoid } from '@/lib/utils'
+
+import { useCallback, useEffect } from 'react'
+import { useDispatch } from 'react-redux'
+
+import { changeLoginState, changeUserinfo } from '@/redux/slices/userSlice'
+
+import { CookieUtils, NanoIDUtils } from '@/lib/utils'
+import { COOKIE_EXPIRES, COOKIE_NAMES, HTTP_HEADERS } from '@/lib/constants'
+import { FETCH_PKEY_URL } from '@/lib/api'
+
 import Base64 from 'crypto-js/enc-base64'
+import Utf8 from 'crypto-js/enc-utf8'
+import { refreshClientId, refreshPkey, refreshToken, refreshUserinfo } from '@/lib/common'
 
 const inter = Inter({ subsets: ['latin'] })
 
-function Home({ data }) {
+function Home() {
   const dispatch = useDispatch()
 
+  const local = useCallback(() => {
+    if (CookieUtils.has(COOKIE_NAMES.PUBLICKEY)) {
+      refreshPkey()
+      if (CookieUtils.has(COOKIE_NAMES.TOKEN) && CookieUtils.has(COOKIE_NAMES.USERINFO)) {
+        refreshToken()
+        refreshUserinfo()
+        dispatch(changeUserinfo(JSON.parse(CookieUtils.get(COOKIE_NAMES.USERINFO))))
+        dispatch(changeLoginState(true))
+        return true
+      }
+      if (CookieUtils.has(COOKIE_NAMES.CLIENTID)) {
+        refreshClientId()
+        return true
+      }
+      CookieUtils.remove(COOKIE_NAMES.TOKEN)
+      CookieUtils.remove(COOKIE_NAMES.USERINFO)
+      CookieUtils.remove(COOKIE_NAMES.CLIENTID)
+      CookieUtils.remove(COOKIE_NAMES.PUBLICKEY)
+    }
+    return false
+  }, [dispatch])
+
+  const fetchAuth = useCallback(async () => {
+    await fetch(FETCH_PKEY_URL, {
+      method: 'POST',
+      mode: 'cors',
+      headers: {
+        cid: Base64.stringify(Utf8.parse(NanoIDUtils.alphanumericId())),
+      }
+    })
+      .then(res => res.json())
+      .then(json => {
+        if (json.status === 2100) {
+          let cid = json.data.cid
+          let pkey = json.data.pkey
+          if (cid && pkey && cid.length > 0 && pkey.length > 0) {
+            CookieUtils.set(COOKIE_NAMES.CLIENTID, cid, COOKIE_EXPIRES.CLIENTID)
+            CookieUtils.set(COOKIE_NAMES.PUBLICKEY, pkey, COOKIE_EXPIRES.PUBLICKEY)
+            return
+          }
+        }
+        console.log("初始化错误");
+      })
+      .catch(err => console.log('初始化错误'))
+  }, [])
+
   useEffect(() => {
-    dispatch(initialize({ data: data }))
-  }, [data, dispatch])
+    if (!local()) {
+      fetchAuth()
+    }
+  }, [dispatch, fetchAuth, local])
 
   return (
     <div className={inter.className}>
@@ -25,39 +80,6 @@ function Home({ data }) {
       </Layout>
     </div>
   )
-}
-
-export async function getStaticProps() {
-  let data = null
-  let zblogId = nanoid()
-  try {
-    const res = await fetch(FETCH_PKEY_URL, {
-      method: "POST",
-      headers: {
-        cid: Base64.stringify(zblogId)
-      }
-    })
-    const publickey = res.headers.get('pkey')
-    if (publickey) {
-      data = {
-        permission: {
-          publickey: publickey,
-          zblogId: zblogId
-        }
-      }
-    }
-  } catch (error) {
-    console.error(error)
-    return { notFound: true }
-  } finally {
-    if (!data) {
-      return { notFound: true }
-    }
-  }
-
-  return {
-    props: { data }
-  }
 }
 
 export default Home

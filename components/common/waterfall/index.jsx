@@ -4,7 +4,7 @@ import PropTypes from 'prop-types'
 
 import styles from './waterfall.module.scss'
 
-const Waterfall = ({children, breakpointColumnsObj}) => {
+const Waterfall = ({ children, breakpointColumnsObj }) => {
 
   return (
     <Masonry
@@ -22,7 +22,7 @@ Waterfall.defaultProps = {
     1700: 4,
     1300: 3,
     950: 2,
-    580: 1
+    550: 1
   }
 }
 

@@ -1,8 +1,11 @@
 import { useState } from 'react'
 
-function useDynamicInput(initialValue) {
-  const [value, setValue] = useState()
-  const reset = () => { }
+function useDynamicInput(setValid, initialValue = '') {
+  const [value, setValue] = useState(initialValue)
+  const reset = () => {
+    setValid(false)
+    setValue(initialValue)
+  }
   const bindings = {
     defaultValue: initialValue,
     onChange: (e) => {

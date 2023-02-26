@@ -1,6 +1,6 @@
-import { PROJECT_NAME } from "@/lib/constants"
+import { PROJECT_GITHUB_URL, PROJECT_NAME } from "@/lib/constants"
 import { Logo } from "@/lib/icons"
-import { Card, Grid, Image, Link, Text } from "@nextui-org/react"
+import { Card, Grid, Link, Text } from "@nextui-org/react"
 
 const ProjectInfoCard = () => {
   return (
@@ -28,7 +28,7 @@ const ProjectInfoCard = () => {
           icon
           color="primary"
           target="_blank"
-          href="https://github.com/"
+          href={PROJECT_GITHUB_URL}
         >
           Visit source code on GitHub.
         </Link>

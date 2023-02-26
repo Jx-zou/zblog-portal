@@ -1,4 +1,4 @@
-import { Text, Card, User, Badge, Modal } from "@nextui-org/react"
+import { Text, Card, User, Badge } from "@nextui-org/react"
 
 export const CardContext = ({ item }) => {
   return (
