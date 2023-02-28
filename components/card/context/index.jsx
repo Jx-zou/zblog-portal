@@ -1,3 +1,4 @@
+import { TimeUtils } from "@/lib/utils"
 import { Text, Card, User, Badge } from "@nextui-org/react"
 
 export const CardContext = ({ item }) => {
@@ -10,19 +11,19 @@ export const CardContext = ({ item }) => {
       </Card.Header>
       <Card.Divider />
       <Card.Body css={{ py: "$5" }}>
-        <Text>{item.description}</Text>
+        <Text>{item.profile}</Text>
       </Card.Body>
       <Card.Divider />
-      <Badge css={{ pr: '4rem' }} color='secondary' content={item.time} enableShadow variant='bordered'>
+      <Badge css={{ pr: '4rem' }} color='secondary' content={TimeUtils.format(new Date(Date.parse(item.createTime)))} enableShadow variant='bordered'>
         <Card.Footer>
           <User
             css={{ pl: '$0', '.nextui-user-desc': { w: '10rem', ov: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }}
             squared
-            src={item.author.avatar.url}
+            src={item.avatar}
             color="gradient"
-            name={item.author.name}
+            name={item.nickname}
             size="xs"
-            description={item.author.desc}
+            description={item.uprofile}
             altText="Z-Blog"
           />
         </Card.Footer>

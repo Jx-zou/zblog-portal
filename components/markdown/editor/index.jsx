@@ -52,15 +52,15 @@ const Editor = () => {
     await fetch(FETCH_UPLOAD_ARTICLE_URL, {
       method: "post",
       headers: {
-        'Content-Type': 'multipart/form-data',
         Authorization: CookieUtils.get(COOKIE_NAMES.TOKEN),
       },
       body: formdata
     })
       .then(res => res.json())
       .then(json => {
-        if (json.status === 200) {
-          console.log('上传成功!')
+        if (json.status === 2000) {
+
+          console.log('发布成功!')
         }
       })
       .catch(err => console.error(err))

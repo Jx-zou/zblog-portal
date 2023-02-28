@@ -3,13 +3,21 @@ import { createSlice } from "@reduxjs/toolkit"
 export const GlobalSlice = createSlice({
   name: 'global',
   initialState: {
+    auth: {
+      cid: '',
+      pkey: '',
+      token: '',
+    },
     search: {
       value: ''
     }
   },
   reducers: {
+    changeAuth: (state, action) => {
+      Object.assign(state.auth, action.payload.auth)
+    },
     changeSearch: (state, action) => {
-      Object.assign(state.search, action.payload.search)
+      state.search.value = action.payload.value
     }
   }
 })

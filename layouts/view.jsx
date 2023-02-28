@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import InfiniteScroll from 'react-infinite-scroller'
 import Waterfall from '@/components/common/waterfall'
@@ -12,7 +12,8 @@ import Details from '@/components/card/details'
 import sampleItems from '/public/json/sampleItems.json'
 import { search } from '@/lib/config'
 import { CookieUtils } from '@/lib/utils'
-import { COOKIE_NAMES, HTTP_HEADERS } from '@/lib/constants'
+import { COOKIE_NAMES } from '@/lib/constants'
+import useAuth from '@/hook/useAuth'
 
 const View = () => {
   const [loading, setLoading] = useState(false)
@@ -21,11 +22,20 @@ const View = () => {
   const [offset, setOffset] = useState(0)
   const [total, setTotal] = useState(1000)
 
-  const searchValue = useSelector((state) => state.global.search.value)
+  const { cid, token } = useAuth()
+  const searchValue = useSelector(state => state.global.search.value)
   const dispatch = useDispatch()
 
+  useMemo(() => {
+    if (searchValue) {
+      setCards([])
+    }
+  }, [searchValue])
+
   const loadMoreData = async () => {
-    if (!CookieUtils.has(COOKIE_NAMES.CLIENTID) && !CookieUtils.has(COOKIE_NAMES.TOKEN)) {
+    if (!cid && !token) {
+      setIsSample(true)
+      setCards([...cards, ...sampleItems.cards])
       return null
     }
     if (loading) return;
@@ -33,11 +43,9 @@ const View = () => {
     await fetch(`${FETCH_CARDS_URL}/${search.page.size}/${offset}`, {
       method: 'POST',
       headers: {
-        cid: CookieUtils.get(HTTP_HEADERS.CLIENTID)
+        cid: CookieUtils.get(COOKIE_NAMES.CLIENTID)
       },
-      body: {
-        search: searchValue
-      }
+      body: searchValue
     })
       .then(res => res.json())
       .then(json => {
@@ -48,12 +56,16 @@ const View = () => {
           setOffset(offset + 1)
           setTotal(json.data.total)
           setCards([...cards, ...json.data.data])
-          return;
+          return
         }
         setIsSample(true)
         setCards([...cards, ...sampleItems.cards])
       })
-      .catch(e => console.log(e))
+      .catch(e => {
+        setIsSample(true)
+        setCards([...cards, ...sampleItems.cards])
+        console.log(e)
+      })
       .finally(() => setLoading(false))
   }
 

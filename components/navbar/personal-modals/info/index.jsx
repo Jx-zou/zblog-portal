@@ -1,6 +1,7 @@
 import DbInput from '@/components/common/double-input'
-import { FETCH_CHANGE_USERINFO_URL, FETCH_UPLOAD_AVATAR_URL, FETCH_UPLOAD_URL } from '@/lib/api'
-import { COOKIE_NAMES, httpHeaders, HTTP_HEADERS, PROJECT_USER } from '@/lib/constants'
+import useAuth from '@/hook/useAuth'
+import { FETCH_CHANGE_USERINFO_URL, FETCH_UPLOAD_AVATAR_URL } from '@/lib/api'
+import { COOKIE_EXPIRES, COOKIE_NAMES, PROJECT_REGS, PROJECT_USER } from '@/lib/constants'
 import { CookieUtils } from '@/lib/utils'
 import { changeInfoVisible } from '@/redux/slices/personalSlice'
 import { changeUserinfo } from '@/redux/slices/userSlice'
@@ -27,9 +28,12 @@ const InfoModal = () => {
   const [nickname, setNickname] = useState(info.nickname)
   const [desc, setDesc] = useState(info.desc)
   const [avatar, setAvatar] = useState(info.avatar)
+  const { token } = useAuth()
 
   const isChange = useMemo(() => {
-    return !(info.nickname === nickname && info.desc === desc)
+    if (nickname.match(PROJECT_REGS.nickname) && desc.match(PROJECT_REGS.desc)) {
+      return !(info.nickname === nickname && info.desc === desc)
+    }
   }, [desc, nickname, info.desc, info.nickname])
 
   const uploadAvatarHandler = async (e) => {
@@ -40,15 +44,14 @@ const InfoModal = () => {
     await fetch(FETCH_UPLOAD_AVATAR_URL, {
       method: "POST",
       headers: {
-        'Content-Type': 'multipart/form-data',
-        Authorization: CookieUtils.get(COOKIE_NAMES.TOKEN)
+        Authorization: token
       },
       body: formdata,
     })
       .then(res => res.json())
       .then(json => {
-        if (json.status === 200) {
-          setAvatar(json.url)
+        if (json.status === 2000) {
+          setAvatar(json.data.url)
         }
       })
       .catch(err => console.error(err))
@@ -64,16 +67,22 @@ const InfoModal = () => {
   const reset = () => {
     setNickname(info.nickname)
     setDesc(info.desc)
+    setAvatar(info.avatar)
+    let nowInfo = { userinfo: { nickname: nickname, desc: desc, avatar: avatar } }
+    dispatch(changeUserinfo())
+    let userinfo = CookieUtils.get(COOKIE_NAMES.USERINFO)
+    Object.assign(userinfo, nowInfo)
+    CookieUtils.set(COOKIE_NAMES.USERINFO, userinfo, COOKIE_EXPIRES.TOKEN)
   }
 
   const userinfoHandler = async () => {
-    if (!isChange()) return
+    if (!isChange) return
     await fetch(FETCH_CHANGE_USERINFO_URL, {
       method: 'POST',
       mode: 'cors',
       headers: {
         'Content-Type': 'application/json;charset=utf-8',
-        Authorization: CookieUtils.get(COOKIE_NAMES.TOKEN)
+        Authorization: token
       },
       body: JSON.stringify(userinfo),
     })
@@ -109,8 +118,12 @@ const InfoModal = () => {
         </Grid>
         <Grid xs={6}>
           <Col>
-            <DbInput css={{ fontWeight: '500', fontSize: '$xl' }} ariaLabel='Nickname view' value={nickname} onChange={(e) => setNickname(e.target.value)} />
-            <DbInput css={{ fontSize: '$xs', fontWeight: '100' }} ariaLabel='Nickname view' value={desc} onChange={(e) => setDesc(e.target.value)} />
+            <div>
+              <DbInput css={{ with: '100%', fontWeight: '500', fontSize: '$xl', color: 'withe' }} ariaLabel='Nickname view' value={nickname} onChange={(e) => setNickname(e.target.value)} />
+            </div>
+            <div>
+              <DbInput css={{ fontSize: '$xs', fontWeight: '100' }} ariaLabel='Desc view' value={desc} onChange={(e) => setDesc(e.target.value)} />
+            </div>
           </Col>
         </Grid>
       </Grid.Container>

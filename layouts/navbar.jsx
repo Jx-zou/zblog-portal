@@ -6,7 +6,7 @@ import ThemeToggle from '@/components/theme/theme-toggle'
 import BgThemeToggle from '@/components/background/bg-theme-toggle'
 import LinkSocialIcon from '@/components/common/link-social-icon'
 
-import { PROJECT_GITHUB_URL } from '@/lib/constants'
+import { PROJECT_GITHUB_URL, PROJECT_USER } from '@/lib/constants'
 import { Github } from '@/lib/icons'
 
 // modals: 
@@ -19,10 +19,8 @@ import ArticleManagerModal from '@/components/navbar/personal-modals/article'
 import { changeArticleManagerVisible, changeInfoVisible, changeLoginVisible, changeLogoutVisible, changeRegistryVisible, changeWriteArticleVisible } from '@/redux/slices/personalSlice'
 
 const FootNavbar = () => {
-  const [isSigned, info] = useSelector((state) => {
-    const user = state.user
-    return [user.isSigned, user.info]
-  })
+  const isSigned = useSelector((state) => state.user.isSigned)
+  const info = useSelector((state) => state.user.info)
 
   const dispatch = useDispatch()
 
@@ -65,7 +63,7 @@ const FootNavbar = () => {
           <Dropdown placement='top-left'>
             <Navbar.Item>
               <Dropdown.Trigger>
-                <Avatar bordered as='button' color='gradient' size='md' src={info.avatar} alt={info.avatar} textColor='white' />
+                <Avatar bordered as='button' color='gradient' size='md' src={info.avatar} alt={PROJECT_USER.avatar.alt} textColor='white' />
               </Dropdown.Trigger>
             </Navbar.Item>
             <Dropdown.Menu color='primary' key='Personal_Center' disabledKeys={isSigned ? ['Registry'] : ['Personal_Info', 'Write_Article', 'Article_Manager']} onAction={personalActions}>

@@ -10,7 +10,7 @@ export const SearchInput = () => {
 
   const onChangeHandler = (e) => {
     setValue(e.target.value)
-    dispatch(changeSearch({ search: value }))
+    dispatch(changeSearch({ value: value }))
   }
 
   return (

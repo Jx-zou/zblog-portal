@@ -1,4 +1,4 @@
-import { chineseUtils } from "@/lib/utils"
+import { ChineseUtils, chineseUtils } from "@/lib/utils"
 import { styled } from "@nextui-org/react"
 import { useState } from "react"
 
@@ -26,7 +26,7 @@ const DbInput = ({ ariaLabel, onDoubleBlur = () => { }, onChange, value, css, cl
     }
   }
 
-  const valueSize = () => value.length + chineseUtils.getSize(value) * 2
+  const valueSize = () => value.length + ChineseUtils.getSize(value) * 2
 
   return (
     <StyledInput

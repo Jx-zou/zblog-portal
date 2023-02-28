@@ -1,7 +1,7 @@
 import { SvgButton } from "@/layouts/styles"
-import { user } from "@/lib/config"
-import { PROJECT_NAME } from "@/lib/constants"
+import { COOKIE_NAMES, PROJECT_NAME, PROJECT_USER } from "@/lib/constants"
 import { DisLike, Like, Share, Star } from "@/lib/icons"
+import { CookieUtils } from "@/lib/utils"
 import { changeCardView } from "@/redux/slices/articleSlice"
 import { useCallback, useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
@@ -62,50 +62,54 @@ const Details = () => {
 
   const fetchContent = useCallback(async () => {
     setFetching(true)
-    setTimeout(() => {
-      setContent('123456')
-      setFetching(false)
-    }, 3000)
-  }, [])
+    await fetch('/' + item.url, {
+      cid: CookieUtils.get(COOKIE_NAMES.CLIENTID)
+    })
+      .then(res => res.text())
+      .then(text => {
+        console.log(text)
+        setContent(text)
+      })
+      .catch(err => console.log(err))
+      .finally(() => setFetching(false))
+  }, [item.url])
 
   useEffect(() => {
-    fetchContent()
-  }, [fetchContent])
+    if (isView) fetchContent()
+  }, [fetchContent, isView])
 
   return (
-    <Modal open={isView} fullScreen css={{ borderRadius: '$0', backgroundColor: '$backgroundAlpha' }} onClose={closeHandler} closeButton preventClose aria-labelledby='Card view modal'>
-      <Modal.Header>
-        <Text h3>{item.title}</Text>
+    <Modal open={isView} fullScreen css={{ borderRadius: '$0', backgroundColor: '$backgroundContrast' }} onClose={closeHandler} closeButton preventClose aria-labelledby='Card view modal'>
+      <Modal.Header justify='flex-start'>
+        <Text color='primary' h3>{item.title}</Text>
       </Modal.Header>
       <Modal.Body>
-        <StyledContent css={{ ta: 'center' }}>
-          {fetching ? <Loading /> : content}
-        </StyledContent>
+        {fetching ? <Loading /> : <StyledContent css={{ ta: 'center' }} dangerouslySetInnerHTML={{ __html: content }} />}
       </Modal.Body>
-      <Modal.Footer justify='space-between'>
+      <Modal.Footer justify='space-between' color='$gray500'>
         <User as='button'
-          src={item.author.avatar.url ? item.author.avatar.url : user.info.avatar.url}
-          name={item.author.name}
-          description={item.author.desc}
+          src={item.avatar ? item.avatar : PROJECT_USER.avatar.alt}
+          name={item.nickname}
+          description={item.uprofile}
           altText={PROJECT_NAME}
         />
         <StyledIcons>
-          <SvgButton onClick={starClickHandler}>
+          <SvgButton onClick={starClickHandler} css={{ mx: '$5' }}>
             <Star filled={collected} size={20} fill='var(--nextui-colors-warning)' />
           </SvgButton>
-          <SvgButton onClick={likeClickHandler}>
+          <SvgButton onClick={likeClickHandler} css={{ mx: '$5' }}>
             <Like size={20} fill={liked ? 'var(--nextui-colors-red700)' : 'currentColor'} />
           </SvgButton>
-          <SvgButton onClick={dislikeClickHandler}>
+          <SvgButton onClick={dislikeClickHandler} css={{ mx: '$5' }}>
             <DisLike size={20} fill={disliked ? 'var(--nextui-colors-gray300)' : 'currentColor'} />
           </SvgButton>
-          <SvgButton>
+          <SvgButton css={{ mx: '$5' }}>
             <Share size={20} fill='var(--nextui-colors-cyan700)' />
           </SvgButton>
         </StyledIcons>
         <Button auto size='xs' color='error' onPress={closeHandler}>关闭</Button>
       </Modal.Footer>
-    </Modal>
+    </Modal >
   )
 }
 

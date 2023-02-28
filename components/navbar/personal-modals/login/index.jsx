@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { changeLoginVisible } from '@/redux/slices/personalSlice';
 import { CookieUtils, RsaUtils, StringUtils } from '@/lib/utils';
+import { changeAuth } from '@/redux/slices/globalSlice';
 
 const LoginModal = () => {
   const [fetching, setFetching] = useState(false)
@@ -49,12 +50,9 @@ const LoginModal = () => {
           let nickname = json.data.nickname
           let desc = json.data.desc
           let avatar = json.data.avatar
-          console.log(token);
-          console.log(nickname);
-          console.log(desc);
-          console.log(avatar);
           if (StringUtils.isNotBlank(token) && StringUtils.isNotBlank(nickname) && StringUtils.isNotBlank(desc) && StringUtils.isNotBlank(avatar)) {
             dispatch(changeLoginState(true))
+            dispatch(changeAuth({ auth: { token: token } }))
             let userinfo = { userinfo: { nickname: nickname, desc: desc, avatar: avatar } }
             dispatch(changeUserinfo(userinfo))
             CookieUtils.set(COOKIE_NAMES.TOKEN, token, COOKIE_EXPIRES.TOKEN)
