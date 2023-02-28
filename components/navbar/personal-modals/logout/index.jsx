@@ -24,7 +24,7 @@ const LogoutModal = () => {
     })
       .then(res => res.json())
       .then(json => {
-        if (json.status === 5000) {
+        if (json.status === 2000) {
           dispatch(changeLoginState(false))
           dispatch(changeUserinfo({ userinfo: user.info }))
           CookieUtils.remove(COOKIE_NAMES.TOKEN)

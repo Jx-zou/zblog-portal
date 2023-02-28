@@ -5,14 +5,14 @@ import Base64 from 'crypto-js/enc-base64'
 import Utf8 from 'crypto-js/enc-utf8'
 
 import { emojis } from './emoji'
-import { FETCH_PUBLISH_URL, FETCH_UPLOAD_ARTICLE_URL, FETCH_UPLOAD_URL } from '@/lib/api'
+import { FETCH_UPLOAD_ARTICLE_URL, FETCH_UPLOAD_PHOTO_URL } from '@/lib/api'
 import Vditor from 'vditor'
 
 import 'vditor/dist/index.css'
 import { changeWriteArticleVisible } from "@/redux/slices/personalSlice"
 import { useDispatch } from "react-redux"
-import { CookieUtils, cookieUtils, StringUtils, stringUtils } from "@/lib/utils"
-import { COOKIE_NAMES, PROJECT_INPUT_TIP, PROJECT_REGS } from "@/lib/constants"
+import { StringUtils } from "@/lib/utils"
+import { PROJECT_INPUT_TIP } from "@/lib/constants"
 
 const StyledEditor = styled('div', {
   pre: {
@@ -28,6 +28,7 @@ const Editor = () => {
   const [title, setTitle] = useState("")
   const [desc, setDesc] = useState(PROJECT_INPUT_TIP.default.welcome)
 
+  const { token } = useAuth()
   const { isDark } = useTheme()
 
   const dispatch = useDispatch()
@@ -52,7 +53,7 @@ const Editor = () => {
     await fetch(FETCH_UPLOAD_ARTICLE_URL, {
       method: "post",
       headers: {
-        Authorization: CookieUtils.get(COOKIE_NAMES.TOKEN),
+        Authorization: token
       },
       body: formdata
     })
@@ -98,7 +99,7 @@ const Editor = () => {
       preview: { actions: ['desktop', 'tablet', 'mp-wechat'] },
       hint: { emoji: emojis },
       upload: {
-        accept: 'image/*,.wav,.jpg,.png,.gif,.jpeg,.svg',
+        accept: 'image/*,.jpg,.png,.jpeg',
         multiple: false,
         fieldName: 'files',
         filename(name) {
@@ -112,11 +113,11 @@ const Editor = () => {
         },
         format(files, responseText) {
           const res = JSON.parse(responseText);
-          const name = files[0].name;
-          const url = res.data.url;
+          const name = res.data[0].name;
+          const url = res.data[0].url;
           return JSON.stringify({ code: 0, data: { errFiles: '', succMap: { [name]: url } } });
         },
-        url: FETCH_UPLOAD_URL
+        url: FETCH_UPLOAD_PHOTO_URL
       },
       cache: false,
       after: () => {
@@ -131,7 +132,7 @@ const Editor = () => {
       <StyledEditor id='vditor' className='vditor' />
       <Row justify='flex-end' css={{ mt: '$5' }}>
         <Button css={{ mr: '$10' }} auto size='sm' color='error' onPress={() => dispatch(changeWriteArticleVisible(false))}>关闭</Button>
-        <Popover isBordered isOpen={isOpen} onOpenChange={setIsOpen} placement='top-left'>
+        <Popover isBordered isOpen={isOpen} onOpenChange={setIsOpen} placement='left-top'>
           <Popover.Trigger>
             <Button css={{ mr: '$10' }} auto size='sm' disabled={isPushing}>
               {isPushing ? <Loading color='currentColor' type='spinner' size='md' /> : '发布'}

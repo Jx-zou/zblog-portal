@@ -110,18 +110,15 @@ const RegistryModal = () => {
     await fetch(FETCH_MAIL_CAPTCHA_URL, {
       method: "POST",
       mode: 'cors',
-      credentials: 'include',
+      headers: {
+        cid: CookieUtils.get(COOKIE_NAMES.CLIENTID),
+      },
       body: RsaUtils.base64Encrypt(email, pkey)
     })
       .then(res => res.json())
       .then(json => {
-        if (json.state !== 2000) {
+        if (json.status !== 2000) {
           setErrorPrompt(json.value || "发送失败")
-        }
-        if (json.state === 5000) {
-          CookieUtils.remove(COOKIE_NAMES.CLIENTID)
-          CookieUtils.remove(COOKIE_NAMES.PUBLICKEY)
-          return
         }
       })
       .catch(err => console.error(err))

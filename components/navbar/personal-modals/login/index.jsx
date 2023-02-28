@@ -23,12 +23,11 @@ const LoginModal = () => {
   const loginVisible = useSelector((state) => state.personal.loginVisible)
   const dispatch = useDispatch()
 
-  const pkey = CookieUtils.get(COOKIE_NAMES.PUBLICKEY)
-
   const loginHandler = async () => {
     if (!isValid()) return
     if (fetching) return
     setFetching(true)
+    const pkey = CookieUtils.get(COOKIE_NAMES.PUBLICKEY)
     await fetch(FETCH_LOGIN_URL, {
       method: 'POST',
       mode: 'cors',
@@ -52,10 +51,10 @@ const LoginModal = () => {
           let avatar = json.data.avatar
           if (StringUtils.isNotBlank(token) && StringUtils.isNotBlank(nickname) && StringUtils.isNotBlank(desc) && StringUtils.isNotBlank(avatar)) {
             dispatch(changeLoginState(true))
-            dispatch(changeAuth({ auth: { token: token } }))
-            let userinfo = { userinfo: { nickname: nickname, desc: desc, avatar: avatar } }
-            dispatch(changeUserinfo(userinfo))
+            dispatch(changeAuth({ token: token }))
             CookieUtils.set(COOKIE_NAMES.TOKEN, token, COOKIE_EXPIRES.TOKEN)
+            let userinfo = { nickname: nickname, desc: desc, avatar: avatar }
+            dispatch(changeUserinfo(userinfo))
             CookieUtils.set(COOKIE_NAMES.USERINFO, JSON.stringify(userinfo), COOKIE_EXPIRES.CLIENTID)
             closeHandler()
           }

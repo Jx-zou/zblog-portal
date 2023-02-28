@@ -6,7 +6,7 @@ import { changeCardView } from "@/redux/slices/articleSlice"
 import { useCallback, useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 
-const { Modal, Text, Button, styled, Loading, User } = require("@nextui-org/react")
+import { Modal, Text, Button, styled, Loading, User } from "@nextui-org/react"
 
 const StyledContent = styled('div', {
   width: '100%',
@@ -25,7 +25,7 @@ const StyledIcons = styled("div", {
 const Details = () => {
   const [fetching, setFetching] = useState(false)
   const [content, setContent] = useState()
-  const [isView, item] = useSelector((state) => [state.article.isView, state.article.item])
+  const [isView, isSample, item] = useSelector((state) => [state.article.isView, state.article.isSample, state.article.item])
 
   const [collected, setCollected] = useState(false)
   const [liked, setLiked] = useState(false)
@@ -48,31 +48,28 @@ const Details = () => {
     fetchDislike()
   }
 
-  const fetchCollect = async () => {
+  const fetchCollect = async () => { }
 
-  }
+  const fetchLike = async () => { }
 
-  const fetchLike = async () => {
-
-  }
-
-  const fetchDislike = async () => {
-
-  }
+  const fetchDislike = async () => { }
 
   const fetchContent = useCallback(async () => {
+    if (isSample) {
+      setContent(item.profile)
+      return
+    }
     setFetching(true)
     await fetch('/' + item.url, {
       cid: CookieUtils.get(COOKIE_NAMES.CLIENTID)
     })
       .then(res => res.text())
       .then(text => {
-        console.log(text)
         setContent(text)
       })
       .catch(err => console.log(err))
       .finally(() => setFetching(false))
-  }, [item.url])
+  }, [isSample, item.profile, item.url])
 
   useEffect(() => {
     if (isView) fetchContent()

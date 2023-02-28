@@ -16,8 +16,7 @@ export const UserSlice = createSlice({
       state.isSigned = action.payload
     },
     changeUserinfo: (state, action) => {
-      console.log(action.payload.userinfo)
-      Object.assign(state.info, action.payload.userinfo)
+      Object.assign(state.info, action.payload)
     },
   }
 })

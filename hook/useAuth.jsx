@@ -1,7 +1,7 @@
 import { useSelector } from "react-redux"
 
 
-function useAuth(width, height) {
+function useAuth() {
   const [pkey, cid, token] = useSelector(state => [state.global.auth.pkey, state.global.auth.cid, state.global.auth.token])
 
 

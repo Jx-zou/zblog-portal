@@ -68,8 +68,8 @@ const InfoModal = () => {
     setNickname(info.nickname)
     setDesc(info.desc)
     setAvatar(info.avatar)
-    let nowInfo = { userinfo: { nickname: nickname, desc: desc, avatar: avatar } }
-    dispatch(changeUserinfo())
+    let nowInfo = { nickname: nickname, desc: desc, avatar: avatar }
+    dispatch(changeUserinfo(nowInfo))
     let userinfo = CookieUtils.get(COOKIE_NAMES.USERINFO)
     Object.assign(userinfo, nowInfo)
     CookieUtils.set(COOKIE_NAMES.USERINFO, userinfo, COOKIE_EXPIRES.TOKEN)

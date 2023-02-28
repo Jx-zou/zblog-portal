@@ -14,7 +14,7 @@ export const GlobalSlice = createSlice({
   },
   reducers: {
     changeAuth: (state, action) => {
-      Object.assign(state.auth, action.payload.auth)
+      Object.assign(state.auth, action.payload)
     },
     changeSearch: (state, action) => {
       state.search.value = action.payload.value

@@ -81,7 +81,7 @@ const View = () => {
         <Waterfall>
           {cards.map((card, index) => {
             return (
-              <ParallaxTiltEffectCard tiltEffect='reverse' key={index} onClick={() => dispatch(changeCardView({ isView: true, item: card }))}>
+              <ParallaxTiltEffectCard tiltEffect='reverse' key={index} onClick={() => dispatch(changeCardView({ isView: true, item: card, isSample: isSample }))}>
                 <CardContext item={card} />
               </ParallaxTiltEffectCard>
             )

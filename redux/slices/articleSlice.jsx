@@ -6,6 +6,7 @@ export const ArticleSlice = createSlice({
   name: 'article',
   initialState: {
     isView: false,
+    isSample: false,
     item: {
       author: {
         name: PROJECT_NAME,

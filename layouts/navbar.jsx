@@ -20,7 +20,7 @@ import { changeArticleManagerVisible, changeInfoVisible, changeLoginVisible, cha
 
 const FootNavbar = () => {
   const isSigned = useSelector((state) => state.user.isSigned)
-  const info = useSelector((state) => state.user.info)
+  const [nickname, avatar, desc] = useSelector((state) => [state.user.info.nickname, state.user.info.avatar, state.user.info.desc])
 
   const dispatch = useDispatch()
 
@@ -63,13 +63,13 @@ const FootNavbar = () => {
           <Dropdown placement='top-left'>
             <Navbar.Item>
               <Dropdown.Trigger>
-                <Avatar bordered as='button' color='gradient' size='md' src={info.avatar} alt={PROJECT_USER.avatar.alt} textColor='white' />
+                <Avatar bordered as='button' color='gradient' size='md' src={avatar} alt={PROJECT_USER.avatar.alt} textColor='white' />
               </Dropdown.Trigger>
             </Navbar.Item>
             <Dropdown.Menu color='primary' key='Personal_Center' disabledKeys={isSigned ? ['Registry'] : ['Personal_Info', 'Write_Article', 'Article_Manager']} onAction={personalActions}>
               <Dropdown.Item key='Personal_Info' textValue='Personal Info'>
-                <Text color='secondary' css={{ d: 'flex' }}>{info.nickname}</Text>
-                <Text small color='primary' css={{ d: 'flex' }}>{info.desc}</Text>
+                <Text color='secondary' css={{ d: 'flex' }}>{nickname}</Text>
+                <Text small color='primary' css={{ d: 'flex' }}>{desc}</Text>
               </Dropdown.Item>
               <Dropdown.Item css={{ display: isSigned ? '' : 'none' }} key='Write_Article' withDivider textValue='Write Article'>写文章</Dropdown.Item>
               <Dropdown.Item css={{ display: isSigned ? '' : 'none' }} key='Article_Manager' textValue='Article Manager'>文章中心</Dropdown.Item>
